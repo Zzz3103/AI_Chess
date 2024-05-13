@@ -14,3 +14,6 @@ class Move:
 
     def to_string(self):
         return "(" + str(self.xfrom) + ", " + str(self.yfrom) + ") -> (" + str(self.xto) + ", " + str(self.yto) + ")"
+    
+    def get_xto_yto(self):
+        return (self.xto, self.yto)

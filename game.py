@@ -68,50 +68,62 @@ def main():
     sqSelected = ()
     playerClicks = []
     current_player_color = pieces.Piece.WHITE
+    highlight_square = None
     while running:
         for event in p.event.get():
             if event.type == p.QUIT:
                 running = False
             elif event.type == p.MOUSEBUTTONDOWN:
-                location = p.mouse.get_pos()
-                col = location[0]//SQ_SIZE
-                row = location[1]//SQ_SIZE
-                if sqSelected == (row,col): #user clicked the same square twice
-                    sqSelected = ()
-                    playerClicks = []
-                else:
-                    sqSelected = (row,col)
-                    playerClicks.append(sqSelected)
-                if len(playerClicks) == 2:
-                    move = Move(playerClicks[0][1], playerClicks[0][0], playerClicks[1][1], playerClicks[1][0])
-                    move = get_valid_user_move(chessboard, move)
-                    if move != 1:
-                        chessboard.perform_move(move)
-                        current_player_color = pieces.Piece.BLACK
-                        drawGameState(screen, chessboard)
-                        # Update màn hình
-                        p.display.flip()
-                        check_black= is_checkmate_or_stalemate(chessboard, "B")
-                        check_white = is_checkmate_or_stalemate(chessboard, "W")
-                        if(check_black):
-                            if (chessboard.is_check(pieces.Piece.BLACK)):
-                                print("Checkmate. White wins.")
-                                break
-                            else:
-                                print("Stalemate for black")
-                                break
-                        if(check_white):
-                            if not chessboard.is_check(pieces.Piece.WHITE):
-                                print("Stalemate for white")
-                    sqSelected = ()
-                    playerClicks = []
+                if current_player_color != "B":
+                    location = p.mouse.get_pos()
+                    col = location[0]//SQ_SIZE
+                    row = location[1]//SQ_SIZE
+                    if highlight_square == (row, col):
+                        highlight_square = None
+                    else:
+                        highlight_square = (row, col)
+                    if sqSelected == (row,col): #user clicked the same square twice
+                        sqSelected = ()
+                        playerClicks = []
+                    else:
+                        sqSelected = (row,col)
+                        playerClicks.append(sqSelected)
+                    if len(playerClicks) == 2:
+                        move = Move(playerClicks[0][1], playerClicks[0][0], playerClicks[1][1], playerClicks[1][0])
+                        move = get_valid_user_move(chessboard, move)
+                        if move != 1:
+                            chessboard.perform_move(move)
+                            current_player_color = pieces.Piece.BLACK
+                            drawGameState(screen, chessboard, highlight_square)
+                            # Update màn hình
+                            p.display.flip()
+                            check_black= is_checkmate_or_stalemate(chessboard, "B")
+                            check_white = is_checkmate_or_stalemate(chessboard, "W")
+                            if(check_black):
+                                if (chessboard.is_check(pieces.Piece.BLACK)):
+                                    print("Checkmate. White wins.")
+                                    break
+                                else:
+                                    print("Stalemate for black")
+                                    break
+                            if(check_white):
+                                if not chessboard.is_check(pieces.Piece.WHITE):
+                                    print("Stalemate for white")
+                            sqSelected = ()
+                            playerClicks = []
+                        elif move == 1:
+                            sqSelected = (playerClicks[1][0], playerClicks[1][1])
+                            playerClicks = []
+                            playerClicks.append(sqSelected)
+                            
         if current_player_color == "B":
             print("AI Turn")
             invalid_moves_ai = get_ai_illegal_moves(chessboard)
             ai_move = ai.AI.get_ai_move(chessboard, invalid_moves_ai)
             chessboard.perform_move(ai_move)
+            highlight_square = (ai_move.get_xto_yto()[1], ai_move.get_xto_yto()[0])
             current_player_color = "W"
-            drawGameState(screen, chessboard)
+            drawGameState(screen, chessboard, highlight_square)
             # Update màn hình
             p.display.flip()
             check_black= is_checkmate_or_stalemate(chessboard, "B")
@@ -129,21 +141,23 @@ def main():
 
             
         # 4. Vẽ bàn cờ và các quân cờ lên màn hình
-        drawGameState(screen, chessboard)
+        drawGameState(screen, chessboard, highlight_square)
             # Update màn hình
         p.display.flip()
         clock.tick(MAX_FPS)
 
-def drawGameState(screen, chessboard):
-    drawBoard(screen)
+def drawGameState(screen, chessboard, highlight_square):
+    drawBoard(screen, highlight_square)
     drawPieces(screen, chessboard)
     
-def drawBoard(screen):
+def drawBoard(screen, highlight_square):
     colors = [p.Color("white"), p.Color("gray")]
     for row in range(DIMENSION):
         for col in range(DIMENSION):
             color = colors[(row + col) % 2]
             p.draw.rect(screen, color, p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if highlight_square != None and highlight_square == (row, col):
+                p.draw.rect(screen, p.Color("yellow"), p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def drawPieces(screen, chessboard):
     for row in range(DIMENSION):  
@@ -153,6 +167,8 @@ def drawPieces(screen, chessboard):
                 image = IMAGES[piece.to_string().strip()]  
                 # Vẽ hình ảnh lên màn hình ở vị trí (col, row) với kích thước SQ_SIZE x SQ_SIZE
                 screen.blit(image, p.Rect(row * SQ_SIZE, col * SQ_SIZE, SQ_SIZE, SQ_SIZE))  # Đảo ngược row và col ở đây
+                    
+                    
 
 
 if __name__ == "__main__":
