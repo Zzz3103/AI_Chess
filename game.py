@@ -82,6 +82,7 @@ def main():
                 running = False
             elif event.type == p.MOUSEBUTTONDOWN:
                 if current_player_color != "B":
+                    highlight_previous = None
                     location = p.mouse.get_pos()
                     col = location[0]//SQ_SIZE
                     row = location[1]//SQ_SIZE
