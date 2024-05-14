@@ -1,6 +1,7 @@
 import board, pieces, ai
 from move import Move
 import pygame as p
+import time
 
 
 
@@ -69,9 +70,14 @@ def main():
     playerClicks = []
     current_player_color = pieces.Piece.WHITE
     highlight_square = None
-    highlight_previous = None
-    while running:
+    first = 0
+    gameover = False
+    while running and not gameover:
         for event in p.event.get():
+            if first == 0:
+                current_player_color = "B"
+                first = 1
+                break
             if event.type == p.QUIT:
                 running = False
             elif event.type == p.MOUSEBUTTONDOWN:
@@ -104,13 +110,13 @@ def main():
                             if(check_black):
                                 if (chessboard.is_check(pieces.Piece.BLACK)):
                                     print("Checkmate. White wins.")
-                                    break
                                 else:
                                     print("Stalemate for black")
-                                    break
+                                gameover = True
                             if(check_white):
                                 if not chessboard.is_check(pieces.Piece.WHITE):
                                     print("Stalemate for white")
+                                gameover = True
                             sqSelected = ()
                             playerClicks = []
                         elif move == 1:
@@ -118,10 +124,15 @@ def main():
                             playerClicks = []
                             playerClicks.append(sqSelected)
                             
-        if current_player_color == "B":
+        if current_player_color == "B" and not gameover:
+            start = time.time()
             print("AI Turn")
             invalid_moves_ai = get_ai_illegal_moves(chessboard)
             ai_move = ai.AI.get_ai_move(chessboard, invalid_moves_ai)
+            end = time.time()
+            print("AI has moved")
+            excution = end - start
+            print("Took AI", excution, "seconds to make a move")
             chessboard.perform_move(ai_move)
             highlight_previous = (ai_move.get_xfrom_yfrom()[1], ai_move.get_xfrom_yfrom()[0])
             highlight_square = (ai_move.get_xto_yto()[1], ai_move.get_xto_yto()[0])
@@ -134,14 +145,13 @@ def main():
             if(check_white):
                 if (chessboard.is_check(pieces.Piece.BLACK)):
                     print("Checkmate. Black wins.")
-                    break
                 else:
                     print("Stalemate for white")
-                    break
+                gameover = True
             if(check_black):
                 if not chessboard.is_check(pieces.Piece.WHITE):
                     print("Stalemate for black")
-
+                gameover = True
             
         # 4. Vẽ bàn cờ và các quân cờ lên màn hình
         drawGameState(screen, chessboard, highlight_square, highlight_previous)
