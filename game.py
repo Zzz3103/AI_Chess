@@ -69,6 +69,7 @@ def main():
     playerClicks = []
     current_player_color = pieces.Piece.WHITE
     highlight_square = None
+    highlight_previous = None
     while running:
         for event in p.event.get():
             if event.type == p.QUIT:
@@ -94,7 +95,8 @@ def main():
                         if move != 1:
                             chessboard.perform_move(move)
                             current_player_color = pieces.Piece.BLACK
-                            drawGameState(screen, chessboard, highlight_square)
+                            highlight_previous = (playerClicks[0][0], playerClicks[0][1])
+                            drawGameState(screen, chessboard, highlight_square, highlight_previous)
                             # Update màn hình
                             p.display.flip()
                             check_black= is_checkmate_or_stalemate(chessboard, "B")
@@ -121,9 +123,10 @@ def main():
             invalid_moves_ai = get_ai_illegal_moves(chessboard)
             ai_move = ai.AI.get_ai_move(chessboard, invalid_moves_ai)
             chessboard.perform_move(ai_move)
+            highlight_previous = (ai_move.get_xfrom_yfrom()[1], ai_move.get_xfrom_yfrom()[0])
             highlight_square = (ai_move.get_xto_yto()[1], ai_move.get_xto_yto()[0])
             current_player_color = "W"
-            drawGameState(screen, chessboard, highlight_square)
+            drawGameState(screen, chessboard, highlight_square, highlight_previous)
             # Update màn hình
             p.display.flip()
             check_black= is_checkmate_or_stalemate(chessboard, "B")
@@ -141,22 +144,24 @@ def main():
 
             
         # 4. Vẽ bàn cờ và các quân cờ lên màn hình
-        drawGameState(screen, chessboard, highlight_square)
+        drawGameState(screen, chessboard, highlight_square, highlight_previous)
             # Update màn hình
         p.display.flip()
         clock.tick(MAX_FPS)
 
-def drawGameState(screen, chessboard, highlight_square):
-    drawBoard(screen, highlight_square)
+def drawGameState(screen, chessboard, highlight_square, highlight_previous):
+    drawBoard(screen, highlight_square, highlight_previous)
     drawPieces(screen, chessboard)
     
-def drawBoard(screen, highlight_square):
+def drawBoard(screen, highlight_square, highlight_previous):
     colors = [p.Color("white"), p.Color("gray")]
     for row in range(DIMENSION):
         for col in range(DIMENSION):
             color = colors[(row + col) % 2]
             p.draw.rect(screen, color, p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
             if highlight_square != None and highlight_square == (row, col):
+                p.draw.rect(screen, p.Color("yellow"), p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
+            if highlight_previous != None and highlight_previous == (row, col):
                 p.draw.rect(screen, p.Color("yellow"), p.Rect(col*SQ_SIZE, row*SQ_SIZE, SQ_SIZE, SQ_SIZE))
 
 def drawPieces(screen, chessboard):

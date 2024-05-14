@@ -17,3 +17,6 @@ class Move:
     
     def get_xto_yto(self):
         return (self.xto, self.yto)
+    
+    def get_xfrom_yfrom(self):
+        return (self.xfrom, self.yfrom)
